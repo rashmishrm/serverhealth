@@ -18,6 +18,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.Scanner;
+import java.util.concurrent.TimeUnit;
 
 public class Consumer {
 	private static Scanner in;
@@ -25,7 +26,7 @@ public class Consumer {
 	public static void main(String[] argv) throws Exception {
 		
 		in = new Scanner(System.in);
-		String topicName = "abc";
+		String topicName = "serverhealth";
 		String groupId = "1";
 
 		ConsumerThread consumerRunnable = new ConsumerThread(topicName, groupId);
@@ -71,7 +72,9 @@ public class Consumer {
 				BulkProcessor bulkProcessor = BulkProcessorFactory.create(client);
 				while (true) {
 					ConsumerRecords<String, String> records = kafkaConsumer.poll(100);
+					
 					for (ConsumerRecord<String, String> record : records) {
+						System.out.println(record.value());
 
 						String values[] = record.value().split("#");
 
@@ -82,14 +85,19 @@ public class Consumer {
 						IndexRequest idx = new IndexRequest(ElasticSearchConfig.INDEX_NAME,
 								ElasticSearchConfig.MAPPING_HEALTH).source(json);
 						bulkProcessor.add(idx);
-
+						System.out.println(record.value());
 					}
+					bulkProcessor.flush();
+					bulkProcessor.awaitClose(2000, TimeUnit.MILLISECONDS);
+					client.admin().indices().prepareRefresh().get();
 
 				}
 			} catch (WakeupException ex) {
 				System.out.println("Exception caught " + ex.getMessage());
+				ex.printStackTrace();
 			} catch (Exception ex) {
 				System.out.println("Exception caught " + ex.getMessage());
+				ex.printStackTrace();
 			} finally {
 				kafkaConsumer.close();
 				System.out.println("After closing KafkaConsumer");
