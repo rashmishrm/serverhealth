@@ -71,7 +71,7 @@ public class Consumer {
 
 				BulkProcessor bulkProcessor = BulkProcessorFactory.create(client);
 				while (true) {
-					ConsumerRecords<String, String> records = kafkaConsumer.poll(100);
+					ConsumerRecords<String, String> records = kafkaConsumer.poll(10);
 					
 					for (ConsumerRecord<String, String> record : records) {
 						System.out.println(record.value());
@@ -88,7 +88,6 @@ public class Consumer {
 						System.out.println(record.value());
 					}
 					bulkProcessor.flush();
-					bulkProcessor.awaitClose(2000, TimeUnit.MILLISECONDS);
 					client.admin().indices().prepareRefresh().get();
 
 				}
@@ -99,6 +98,8 @@ public class Consumer {
 				System.out.println("Exception caught " + ex.getMessage());
 				ex.printStackTrace();
 			} finally {
+				//bulkProcessor.awaitClose(2000, TimeUnit.MILLISECONDS);
+
 				kafkaConsumer.close();
 				System.out.println("After closing KafkaConsumer");
 			}

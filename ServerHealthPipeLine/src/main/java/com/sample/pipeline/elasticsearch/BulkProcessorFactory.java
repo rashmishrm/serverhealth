@@ -29,7 +29,7 @@ public class BulkProcessorFactory {
 
 			}
 			// TODO impl beforeBulk, afterBulk, afterBulk
-		}).setBulkActions(2) // Max number of requests in the buffer
+		}).setBulkActions(15) // Max number of requests in the buffer
 				.setBulkSize(new ByteSizeValue(5, ByteSizeUnit.MB)) // Max
 																	// document
 																	// size in
